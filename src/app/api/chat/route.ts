@@ -16,13 +16,29 @@ export async function POST(req: { json: () => any }) {
     console.log("message received", message);
 
     const url = message.match(urlPattern);
+
+    let scrapedContent = "";
+
     if (url) {
       console.log("Url found", url);
-      const scrapedContent = await scrapeUrl(url);
+      const scrapedResponse = await scrapeUrl(url);
       console.log("Scraped content", scrapedContent);
+      scrapedContent = scrapedResponse.content;
     }
 
-    const response = await getGroqResponse(message);
+    // Extract the users Query by removing the URL if present
+
+    const userQuery = message.replace(url ? url[0] : "", "").trim();
+    console.log("question: " , userQuery);
+    const prompt = `
+      answer my question "${userQuery}"
+
+      Based on the following content:
+      <content>
+        ${scrapedContent}
+      </content>
+    `;
+    const response = await getGroqResponse(prompt);
 
     return NextResponse.json({ message: response });
   } catch (error) {
