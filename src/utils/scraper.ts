@@ -68,7 +68,7 @@ export async function scrapeUrl(url: string) {
       paragraphs,
       listItems,
     ].join(" ");
-    combinedContent = cleanText(combinedContent).slice(0, 40000);
+    combinedContent = cleanText(combinedContent).slice(0, 30000);
     return {
       url,
       title: cleanText(title),
