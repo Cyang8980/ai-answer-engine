@@ -9,28 +9,23 @@ import { getGroqResponse } from "@/utils/groqClient";
 import { scrapeUrl, urlPattern } from "@/utils/scraper";
 
 // Exported POST handler
-export async function POST(req: { json: () => any; }) {
+export async function POST(req: { json: () => any }) {
   try {
-    const { message } = await req.json()
+    const { message } = await req.json();
 
     console.log("message received", message);
 
-    
     const url = message.match(urlPattern);
     if (url) {
-      console.log("Url found", url)
+      console.log("Url found", url);
       const scrapedContent = await scrapeUrl(url);
-      console.log("Scraped content", scrapedContent)
+      console.log("Scraped content", scrapedContent);
     }
 
-    const response = await getGroqResponse(message)
+    const response = await getGroqResponse(message);
 
-    return NextResponse.json({message: response})
-
-  } catch( error ) {
-    return NextResponse.json({Message: "Error"})
+    return NextResponse.json({ message: response });
+  } catch (error) {
+    return NextResponse.json({ Message: "Error" });
   }
 }
-
-
-
