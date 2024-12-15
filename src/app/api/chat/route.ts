@@ -3,7 +3,6 @@
 // Refer to the Groq SDK here on how to use an LLM: https://www.npmjs.com/package/groq-sdk
 // Refer to the Cheerio docs here on how to parse HTML: https://cheerio.js.org/docs/basics/loading
 // Refer to Puppeteer docs here: https://pptr.dev/guides/what-is-puppeteer
-import puppeteer from "puppeteer";
 import { NextResponse } from "next/server";
 import { getGroqResponse } from "@/utils/groqClient";
 import { scrapeUrl, urlPattern } from "@/utils/scraper";
@@ -11,10 +10,10 @@ import { scrapeUrl, urlPattern } from "@/utils/scraper";
 // Exported POST handler
 export async function POST(req: { json: () => any }) {
   try {
-    const { message } = await req.json();
+    const { message, messages } = await req.json();
 
     console.log("message received", message);
-
+    console.log("messages: ", messages);
     const url = message.match(urlPattern);
 
     let scrapedContent = "";
@@ -22,15 +21,15 @@ export async function POST(req: { json: () => any }) {
     if (url) {
       console.log("Url found", url);
       const scrapedResponse = await scrapeUrl(url);
-      console.log("Scraped content", scrapedContent);
-      scrapedContent = scrapedResponse.content;
+      if (scrapedResponse) {
+        scrapedContent = scrapedResponse.content;
+      }
     }
-
     // Extract the users Query by removing the URL if present
 
     const userQuery = message.replace(url ? url[0] : "", "").trim();
-    console.log("question: " , userQuery);
-    const prompt = `
+    console.log("question: ", userQuery);
+    const userPrompt = `
       answer my question "${userQuery}"
 
       Based on the following content:
@@ -38,10 +37,19 @@ export async function POST(req: { json: () => any }) {
         ${scrapedContent}
       </content>
     `;
-    const response = await getGroqResponse(prompt);
+
+    const llmMessages = [
+      ...(Array.isArray(messages) ? messages : []),
+      {
+        role: "user",
+        content: userPrompt,
+      },
+    ];
+    const response = await getGroqResponse(llmMessages);
 
     return NextResponse.json({ message: response });
   } catch (error) {
+    console.log(error)
     return NextResponse.json({ Message: "Error" });
   }
 }

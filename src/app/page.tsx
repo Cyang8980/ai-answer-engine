@@ -3,14 +3,14 @@
 import { useState } from "react";
 
 type Message = {
-  role: "user" | "ai";
+  role: "user" | "assistant";
   content: string;
 };
 
 export default function Home() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([
-    { role: "ai", content: "Hello! How can I help you today?" },
+    { role: "assistant", content: "Hello! How can I help you today?" },
   ]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,31 +34,34 @@ export default function Home() {
       });
 
       const data = await response.json();
-      console.log("data:", data)
-      setMessages(prev => [...prev, { role: "ai", content: data.message } ])
+      console.log("data:", data);
+      setMessages(prev => [...prev, { role: "assistant", content: data.message }]);
       // Add the AI response to the conversation
-      const aiMessage = { role: "ai" as const, content: data.result };
+      const aiMessage = { role: "assistant" as const, content: data.result };
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error("Error:", error);
-    
+
       // Log the error message to understand what went wrong
       if (error instanceof Error) {
         console.error("Detailed error message:", error.message);
       }
-    
+
       // Provide a more detailed error message in the chat
-      let errorMessageContent = "Sorry, something went wrong while fetching the AI response.";
-      
+      let errorMessageContent =
+        "Sorry, something went wrong while fetching the AI response.";
+
       if (error instanceof Error) {
         errorMessageContent = `Oops! An error occurred: ${error.message}. Please try again later.`;
       }
-    
+
       // Add the error message to the conversation
-      const errorMessage = { role: "ai" as const, content: errorMessageContent };
+      const errorMessage = {
+        role: "assistant" as const,
+        content: errorMessageContent,
+      };
       setMessages(prev => [...prev, errorMessage]);
-    }
-     finally {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -78,11 +81,13 @@ export default function Home() {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex gap-4 mb-4 ${msg.role === "ai" ? "justify-start" : "justify-end flex-row-reverse"}`}
+              className={`flex gap-4 mb-4 ${msg.role === "assistant" ? "justify-start" : "justify-end flex-row-reverse"}`}
             >
               <div
                 className={`px-4 py-2 rounded-2xl max-w-[80%] ${
-                  msg.role === "ai" ? "bg-gray-800 border border-gray-700 text-gray-100" : "bg-cyan-600 text-white ml-auto"
+                  msg.role === "assistant"
+                    ? "bg-gray-800 border border-gray-700 text-gray-100"
+                    : "bg-cyan-600 text-white ml-auto"
                 }`}
               >
                 {msg.content}
@@ -92,7 +97,11 @@ export default function Home() {
           {isLoading && (
             <div className="flex gap-4 mb-4">
               <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                <svg className="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                <svg
+                  className="w-5 h-5 text-gray-400"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-8c.79 0 1.5-.71 1.5-1.5S8.79 9 8 9s-1.5.71-1.5 1.5S7.21 11 8 11zm8 0c.79 0 1.5-.71 1.5-1.5S16.79 9 16 9s-1.5.71-1.5 1.5.71 1.5 1.5 1.5zm-4 4c2.21 0 4-1.79 4-4h-8c0 2.21 1.79 4 4 4z" />
                 </svg>
               </div>
