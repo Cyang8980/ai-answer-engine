@@ -2,6 +2,7 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 import { Logger } from "./logger";
 import { Redis } from "@upstash/redis";
+import { Message } from "postcss";
 
 const logger = new Logger("scraper");
 const redis = new Redis({
@@ -195,5 +196,46 @@ async function cacheContent(
     );
   } catch (error) {
     logger.error(`Cache storage error: ${error}`);
+  }
+}
+
+
+// Helper functions
+export async function saveConversation(id: string, messages: Message[]) {
+  try {
+    logger.info(`saving conversatio with ${id}`);
+    await redis.set(`conversation: ${id}`, JSON.stringify(messages));
+    await redis.expire(`conversation: ${id}`, 7* (24 * 60 * 60));
+    logger.info(
+      `successfully saved conversation ${id} with ${messages.length} messages`
+    );
+  } catch (error) {
+    logger.error(`Failed to save conversation ${id}: ${error}`)
+    throw error;
+  }
+}
+
+export async function getConversation(id: string): Promise<Message[] | null> {
+  try {
+    logger.info(`Fetching conversation with ID ${id}`);
+    const data = await redis.get(`conersation:${id}`);
+
+    if (!data) {
+      logger.info(`No conversation found for ID:${id}`);
+      return null
+    }
+
+    if (typeof data === "string") {
+      const messages = JSON.parse(data);
+      logger.info(
+        `Successfully retrieved conversation ${id} with ${messages.length} messages`
+      );
+      return messages
+    }
+    logger.info(`Successfully retrieved conversation ${id}`);
+    return data as Message[]
+  } catch (error) {
+    logger.error(`Error retrieving conversation ${id}: ${error}`);
+    return null;
   }
 }
