@@ -50,11 +50,9 @@ export default function Home() {
       // Provide a more detailed error message in the chat
       let errorMessageContent =
         "Sorry, something went wrong while fetching the AI response.";
-
       if (error instanceof Error) {
         errorMessageContent = `Oops! An error occurred: ${error.message}. Please try again later.`;
       }
-
       // Add the error message to the conversation
       const errorMessage = {
         role: "assistant" as const,
